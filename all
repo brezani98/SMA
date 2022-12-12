@@ -1,0 +1,199 @@
+
+// app.project.rootItem
+
+var proj = app.project;
+var rootItem = proj.rootItem 
+//alert (app.project.name);
+//alert (proj.path);
+
+//importovat subor
+
+var subor=File.openDialog("Vyberte si subor");
+var helpArray = [];
+helpArray.push(subor.fsName);
+proj.importFiles(helpArray);
+
+
+var nazovSystemu = Folder.fs;
+var subor1
+if (nazovSystemu = "Windows") {
+    var subor1= "All files:*.*"
+
+}
+
+
+
+subor=File.openDialog("Vyberte si subory", subor1, true);
+helpArray = [];
+if(subor) {
+for(var i = 0; i<subor.length; i++)
+{
+    helpArray.push(subor[i].fsName);
+}
+proj.importFiles(helpArray, 1, rI, 0);
+}
+
+var filterString = "*.mp4";
+if (nazovSystemu = "Windows") {
+    var subor1= filterString;
+}
+
+var suborMp4 = rI.createBin("Mp4");
+
+subor=File.openDialog("Vyberte si subory", subor1, true);
+helpArray = [];
+if(subor) {
+for(var i = 0; i<subor.length; i++)
+{
+    helpArray.push(subor[i].fsName);
+}
+proj.importFiles(helpArray, 1, suborMp4, 0);
+}
+
+for(var i=0; i<subor.length; i++) {
+
+}
+
+
+
+
+var importFolder = Folder.selectDialog("Select folder to import");
+var folderFiles = [];
+folderFiles = importFolder.getFiles();
+var fileNames = [];
+for(var j=0; j<folderFiles.length; j++){
+    var name = folderFiles[j].fsName;
+    if(folderFiles[j] instanceof File){
+    fileNames.push(folderFiles[j].fsName);
+    }
+}
+proj.importFiles(fileNames, 1, rI, 0);
+
+//create Bin
+var videoBin = rootItem.createBin("Video"); //app.project.rootItem.createBin("Video");
+videoBin.setColorLabel(5);
+
+var audioBin = rootItem.createBin("Audio");
+audioBin.setColorLabel(3);
+
+var imageBin = rootItem.createBin("Image");
+imageBin.setColorLabel(8);
+
+//move and rename Bin
+imageBin.renameBin("Graphic");
+imageBin.moveBin(videoBin);
+
+//create a new Sequence
+var Seq1 = proj.createNewSequence("Sequence1", "ID123");
+alert(videoBin.name);
+$.writeln(videoBin.name);
+
+var size = (rootItem.children.length);
+$.writeln(size);
+
+$.writeln(rootItem.children.numItems);
+$.writeln(proj.sequences.numSequences);
+$.writeln(proj.activeSequence.audioTracks.numTracks);
+$.writeln(proj.activeSequence.videoTracks.numTracks);
+
+//organizovanie porjektu
+function organizeProject() {
+
+    var binVideo = rI.createBin("Video");
+    var binAudio = rI.createBin("Audio");
+    var binImage = rI.createBin("Image");
+
+     binAudio.setColorLabel(3);
+
+    var arrayVideo = [];
+    var arrayAudio = [];
+    var arrayImage = [];
+
+    for(var i=0; i<rI.children.numItems;i++){
+        var object = rI.children[i];
+        var name = rI.children[i].name;
+        var extension = name.substring(name.length-3).toLowerCase();
+
+        if(extension == "jpg" || extension == "png"){ 
+            arrayImage.push(object);
+        }
+        if(extension == "mp3" || extension == "wav"){ 
+            arrayAudio.push(object);
+        }
+        if(extension == "mp4" || extension == "mts"){ 
+            arrayVideo.push(object); 
+        }
+    }
+        moveToFolder(arrayVideo,binVideo);
+        moveToFolder(arrayAudio,binAudio);
+        moveToFolder(arrayImage,binImage);
+};
+
+function moveToFolder(items,folder) {
+    for (var i=0; i<items.length;i++){
+            items[i].moveBin(folder);
+    }
+}
+
+// overwrite clip
+
+var position = Seq1.getPlayerPosition();
+Seq1.videoTracks[0].overwriteClip(rootItem.children[0],position);
+
+if(Seq1.videoTracks[0].isMuted()){
+    Seq1.videoTracks[0].setMute(1);
+}
+
+for(var i=0;i<Seq1.videoTracks.length;i++) {
+    if(!Seq1.videoTracks[i].isMuted()){
+        Seq1.videoTracks[i].setMute(1);
+    }
+    else {
+        Seq1.videoTracks[i].setMute(0);
+    }
+}
+
+//create new marker
+var position = Seq1.getPlayerPosition();
+var marker1 = Seq1.markers.createMarker(5);
+var length = 0;
+for(var i=0;i<Seq1.videoTracks[0].clips.numItems;i++){
+    length += Seq1.videoTracks[0].clips[i].duration.seconds;
+};
+marker1.end = length;
+marker1.setTypeAsComment();
+marker1.name = "Prvy marker";
+
+var marker1;
+for(var i=0;i< Seq1.videoTracks[0].clips.numItems;i++) {
+    var marker1 = Seq1.markers.createMarker(Seq1.videoTracks[0].clips[i].start.seconds);
+    marker1.end = Seq1.videoTracks[0].clips[i].end.seconds;
+    marker1.name = Seq1.videoTracks[0].clips[i].name;
+}
+
+
+for(var j=0;j< Seq1.markers.numMarkers;j++) {
+    var marker = Seq1.markers[j];
+
+switch(j)
+{
+    case 0: 
+    marker.name = "Prvy marker";
+    marker.setTypeAsComment();
+    break;
+
+    case 1: 
+    marker.name = "Druhy marker";
+    marker.setTypeAsSegmentation();
+    break;
+
+    case 2: 
+    marker.name = "Treti marker";
+    marker.setTypeAsChapter();
+    break;
+
+    default:
+    break;
+}
+};
+
